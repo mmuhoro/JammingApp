@@ -1,55 +1,52 @@
+let userAccessToken = '';
+let userAccessTokenExpirey = 0;
+
+const clientID = '1c2f8c17144c4b338674c05fa3b02d87';
+// const clientSecret = '838c2b25766a42a9848474b2095a9ac1';
+const redirectURI = 'http://localhost:3000/';
+let userID = '';
+let playlistID = '';
 
 const Spotify = {
-  userAccessToken : '',
-  userAccessTokenExpirey : 0,
-
-  clientID : '1c2f8c17144c4b338674c05fa3b02d87',
-  // clientSecret : '838c2b25766a42a9848474b2095a9ac1',
-  redirectURI : 'http://mmjamming.surge.sh/', //'http://localhost:3000/',
 
   getAccessToken() {
 
     // Token set, just return that
-    if(this.userAccessToken) {
-      return this.userAccessToken;
+    if(userAccessToken) {
+      return userAccessToken;
     }
 
     // No Token See if one is set in url
     let access_token = window.location.href.match('access_token=([^&]*)');
     if(access_token) {
-      this.userAccessToken = access_token[1];
+      userAccessToken = access_token[1];
       let expires_in = window.location.href.match('expires_in=([^&]*)');
       if(expires_in) {
-        this.userAccessTokenExpirey = +expires_in[1];
+        userAccessTokenExpirey = +expires_in[1];
       }
       window.setTimeout(() => {
-        this.userAccessToken = '';
-      }, this.userAccessTokenExpirey * 1000);
+        userAccessToken = '';
+      }, userAccessTokenExpirey * 1000);
 
       // Clean up url
       window.history.pushState('Access Token', null, '/');
 
-      return this.userAccessToken;
+      return userAccessToken;
     }
 
     // No Token set in url generate one
     let url = 'https://accounts.spotify.com/authorize';
-    url += '?client_id=' + this.clientID + '&response_type=token&';
-    url += 'scope=playlist-modify-public&redirect_uri=' + this.redirectURI;
+    url += '?client_id=' + clientID + '&response_type=token&';
+    url += 'scope=playlist-modify-public&redirect_uri=' + redirectURI;
 
     window.location = url;
   },
 
   async search(searchTerm) {
 
-    // Get access token before user's 1st search
-    if (!this.userAccessToken) {
-      this.getAccessToken();
-    }
-
     let url = 'https://api.spotify.com/v1/search?type=track&q=' + searchTerm;
     let response = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${this.userAccessToken}`}
+      headers: { 'Authorization': `Bearer ${userAccessToken}`}
     });
 
     let tracks = [];
@@ -76,18 +73,10 @@ const Spotify = {
     return tracks[0];
   },
 
-  async savePlaylist(playlistName, trackURIs) {
-    if(!playlistName || !trackURIs) return;
-
-    if (!this.userAccessToken) {
-      this.getAccessToken();
-    }
-
-    // Get userID
-    let userID = '';
+  async getUserId() {
     let url = 'https://api.spotify.com/v1/me';
-    let response = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${this.userAccessToken}`}
+    let response = fetch(url, {
+      headers: { 'Authorization': `Bearer ${userAccessToken}`}
     });
     if (response && response.ok) {
       let jsonResponse = await response.json();
@@ -99,15 +88,34 @@ const Spotify = {
     } else {
       throw new Error('Get User ID: response.nok');
     }
+    return userID;
+  },
+
+  async getPlayList() {
+
+  }
+
+  async createPlayList(playlistName) {
+    let thisPlaylistID = '';
+
+
+
+    return thisPlaylistID;
+  }
+
+  async savePlaylist(playlistName, trackURIs) {
+    if(!playlistName || !trackURIs) return;
+
+    // Get userID
+    userID = this.getUserId();
 
     // Create Playlist
-    let playlistID = '';
-    url = `https://api.spotify.com/v1/users/${userID}/playlists`;
-    response = await fetch(url, {
+    let url = `https://api.spotify.com/v1/users/${userID}/playlists`;
+    let response = await fetch(url, {
       method: 'POST',
       body: JSON.stringify({ name: playlistName }),
       headers: {
-        'Authorization': `Bearer ${this.userAccessToken}`,
+        'Authorization': `Bearer ${userAccessToken}`,
         'Content-Type': 'application/json'
       }
     });
@@ -128,18 +136,42 @@ const Spotify = {
       method: 'POST',
       body: JSON.stringify({ uris: trackURIs }),
       headers: {
-        'Authorization': `Bearer ${this.userAccessToken}`,
+        'Authorization': `Bearer ${userAccessToken}`,
         'Content-Type': 'application/json'
       }
     });
     if (response && response.ok) {
       let jsonResponse = await response.json();
+      console.log(jsonResponse);
       if (jsonResponse) {
       } else {
         throw new Error('Failed to Save URIs');
       }
     } else {
       throw new Error('Create playlist: response.nok');
+    }
+  },
+
+  async getPlayLists() {
+    let userID = this.getUserId().then(user => user);
+    console.log(userID.then(user => user));
+    return;
+    let url = `https://api.spotify.com/v1/users/${userID.then(user => {
+      return user;
+    })}/playlists`;
+    let response = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${userAccessToken}`}
+    });
+    if (response && response.ok) {
+      let jsonResponse = await response.json();
+      console.log(jsonResponse);
+      // if (jsonResponse && jsonResponse.id) {
+      //   userID = jsonResponse.id;
+      // } else {
+      //   throw new Error('No Id');
+      // }
+    } else {
+      throw new Error('Get User playlists: response.nok');
     }
   }
 }

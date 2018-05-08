@@ -6,7 +6,6 @@ import './SearchResults.css';
 
 class SearchResults extends Component {
   render() {
-    // console.log(this.props.searchResults[0]);
     return (
       <div className="SearchResults">
         <h2>Results</h2>

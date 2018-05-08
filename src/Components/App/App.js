@@ -12,8 +12,6 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    Spotify.getAccessToken();
-
     this.state = {
       searchResults: [],
       playlistName: 'My Playlist',
@@ -52,15 +50,21 @@ class App extends Component {
         return track.uri;
       })
     );
-    Spotify.savePlaylist(this.state.playlistName, trackURIs);
+    try {
+      Spotify.savePlaylist(this.state.playlistName, trackURIs[0]);
+    } catch (e) { }
     this.setState({playlistName: 'New Playlist'});
     this.setState({playlistTracks: []});
   }
 
   search(searchTerm) {
-    let results = Spotify.search(searchTerm);
-    // console.log(results);
-    this.setState({searchResults: results});
+    let results = [];
+    try {
+      results = Spotify.search(searchTerm);
+    } catch (e) {  }
+    results.then(tracks => {
+      this.setState({searchResults: tracks});
+    });
   }
 
   render() {
