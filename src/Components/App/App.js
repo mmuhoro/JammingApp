@@ -15,7 +15,8 @@ class App extends Component {
     this.state = {
       searchResults: [],
       playlistName: 'My Playlist',
-      playlistTracks: []
+      playlistTracks: [],
+      playlistID: ''
     };
 
     this.addTrack = this.addTrack.bind(this);
@@ -23,19 +24,27 @@ class App extends Component {
     this.updatePlaylistName = this.updatePlaylistName.bind(this);
     this.savePlaylist = this.savePlaylist.bind(this);
     this.search = this.search.bind(this);
+    this.onEditClick = this.onEditClick.bind(this);
+    this.setSearchTerm = this.setSearchTerm.bind(this);
+  }
+
+  setSearchTerm(searchTerm) {
+    this.setState({searchTerm: searchTerm});
   }
 
   addTrack(track) {
-    if(this.state.playlistTracks.find(mTrack => mTrack.id===track.id)) {
+    let tracks = this.state.playlistTracks ? this.state.playlistTracks : [];
+    if(tracks && tracks.find(mTrack => mTrack.id===track.id)) {
       return
     };
-    this.state.playlistTracks.push(track);
-    this.setState({playlistTracks: this.state.playlistTracks});
+    tracks.push(track);
+    this.setState({playlistTracks: tracks});
   }
 
   removeTrack(track) {
+    // console.log(track);return;
     let playlistTracks = this.state.playlistTracks;
-    playlistTracks = playlistTracks.filter(mTrack => mTrack.id !== track.id);
+    playlistTracks = playlistTracks.filter(mTrack => mTrack.key !== track.key);
     this.setState({playlistTracks: playlistTracks});
   }
 
@@ -51,13 +60,21 @@ class App extends Component {
       })
     );
     try {
-      Spotify.savePlaylist(this.state.playlistName, trackURIs[0]);
+      Spotify.savePlaylist(this.state.playlistName, trackURIs[0], this.state.playlistID);
     } catch (e) { }
-    this.setState({playlistName: 'New Playlist'});
-    this.setState({playlistTracks: []});
+    this.setState({
+      playlistName: 'New Playlist',
+      playlistTracks: [],
+      playlistID: ''
+    });
+    localStorage.removeItem('playlists');
   }
 
   search(searchTerm) {
+    if(!searchTerm) {
+      alert('Please enter a search term!');
+      return;
+    }
     let results = [];
     try {
       results = Spotify.search(searchTerm);
@@ -67,15 +84,26 @@ class App extends Component {
     });
   }
 
+  onEditClick(id, name) {
+    let results = Spotify.getPlayListTracks(id);
+    results.then(tracks => {
+      this.setState({
+        playlistName: name,
+        playlistTracks: tracks,
+        playlistID: id
+      });
+    })
+  }
+
   render() {
     return (
       <div>
         <h1>Ja<span className="highlight">mmm</span>ing</h1>
         <div className="App">
-          <SearchBar onSearch={this.search} />
+          <SearchBar onSearch={this.search}/>
           <div className="App-playlist">
             <SearchResults searchResults={this.state.searchResults} onAdd={this.addTrack} />
-            <Playlist playlistName={this.state.playlistName} playlistTracks={this.state.playlistTracks} onRemove={this.removeTrack} onNameChange={this.updatePlaylistName} onSave={this.savePlaylist} />
+            <Playlist playlistName={this.state.playlistName} playlistTracks={this.state.playlistTracks} onRemove={this.removeTrack} onNameChange={this.updatePlaylistName} onSave={this.savePlaylist} onEditClick={this.onEditClick}/>
           </div>
         </div>
       </div>

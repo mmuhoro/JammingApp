@@ -1,0 +1,28 @@
+.Playlists {
+  margin-top: 30px;
+  text-align: left;
+  width: 100%;
+}
+
+.Playlists h2 {
+  margin-bottom: .22rem;
+  width: 100%;
+}
+.Playlists h3 {
+  padding: .5rem;
+  width: 90%;
+  border-bottom: 1px solid rgba(256, 256, 256, 0.8);
+}
+
+.Playlists h3 .playlist-action {
+  cursor: pointer;
+  padding: .5rem;
+  font-size: 0.75rem;
+  transition: color .25s;
+  width: 25px;
+  float: right;
+}
+
+.Playlists h3 .playlist-action:hover {
+  color: rgba(265, 265, 265, .5);
+}

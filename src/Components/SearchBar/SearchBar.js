@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './SearchBar.css';
+import './custom.js';
 
 class SearchBar extends Component {
 
@@ -14,6 +15,19 @@ class SearchBar extends Component {
     this.handleTermChange = this.handleTermChange.bind(this);
     this.checkReturnKey   = this.checkReturnKey.bind(this);
   }
+
+  componentDidMount() {
+    // Check if searchTerm is saved and restore
+    let searchTerm = localStorage.getItem('searchTerm');
+    if(searchTerm) {
+      // Restore searchTerm
+      this.setState({searchTerm: searchTerm});
+      // Set input.value
+      document.getElementById("search-input").value = searchTerm;
+      localStorage.removeItem('searchTerm');
+    }
+  }
+
 
   search() {
     this.props.onSearch(this.state.searchTerm);
@@ -32,7 +46,7 @@ class SearchBar extends Component {
   render() {
     return (
       <div className="SearchBar">
-        <input placeholder="Enter A Song, Album, or Artist" onChange={this.handleTermChange} onKeyPress={this.checkReturnKey} />
+        <input id="search-input" placeholder="Enter A Song, Album, or Artist" onChange={this.handleTermChange} onKeyPress={this.checkReturnKey}/>
         <a onClick={this.search}>SEARCH</a>
       </div>
     );
